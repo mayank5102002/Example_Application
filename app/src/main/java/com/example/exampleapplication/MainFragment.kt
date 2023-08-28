@@ -26,10 +26,20 @@ class MainFragment : Fragment() {
     ): View {
         binding = ActivityMainBinding.inflate(layoutInflater)
 
+        viewModel.init(requireContext())
+
         val usernameEditText : EditText = binding.editTextusername
         val passwordEditText : EditText = binding.editTextpassword
         val loginButton : Button = binding.buttonlogin
         val registerButton : Button = binding.buttonRegister
+
+        viewModel.error.observe(viewLifecycleOwner){
+            Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+        }
+
+        viewModel.loginId.observe(viewLifecycleOwner){
+            Toast.makeText(requireContext(), "Login successfully", Toast.LENGTH_LONG).show()
+        }
 
         loginButton.setOnClickListener {
             val username = usernameEditText.text.toString()
@@ -46,8 +56,7 @@ class MainFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val toast : Toast = Toast.makeText(requireContext(), "Username: $username, Password: $password", Toast.LENGTH_LONG)
-            toast.show()
+            viewModel.login(username, password)
         }
 
         registerButton.setOnClickListener{
@@ -56,5 +65,10 @@ class MainFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    override fun onDestroy(){
+        super.onDestroy()
+        viewModel.onDestroy()
     }
 }

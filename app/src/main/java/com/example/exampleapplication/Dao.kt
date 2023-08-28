@@ -10,7 +10,15 @@ object Dao {
     private lateinit var db: SQLiteDatabase
 
     fun init(context: Context) {
-        db = DatabaseHelper(context).writableDatabase
+        synchronized(this) {
+            if (!::db.isInitialized) {
+                db = DatabaseHelper(context).writableDatabase
+            }
+        }
+    }
+
+    fun closeDb() {
+        db.close()
     }
 
     fun registerUser(firstName: String, lastName: String, username: String, password: String): Long {
@@ -24,7 +32,7 @@ object Dao {
     }
 
     fun userExists(username: String): Boolean {
-        val query = "SELECT $DatabaseHelper.COL_ID FROM $DatabaseHelper.TABLE_NAME WHERE $DatabaseHelper.COL_USERNAME = ?"
+        val query = "SELECT ${DatabaseHelper.COL_ID} FROM ${DatabaseHelper.TABLE_NAME} WHERE ${DatabaseHelper.COL_USERNAME} = ?"
         val cursor = db.rawQuery(query, arrayOf(username))
         val exists = cursor.count > 0
         cursor.close()
@@ -33,7 +41,7 @@ object Dao {
 
     @SuppressLint("Range")
     fun login(username: String, password: String): Long? {
-        val query = "SELECT $DatabaseHelper.COL_ID FROM $DatabaseHelper.TABLE_NAME WHERE $DatabaseHelper.COL_USERNAME = ? AND $DatabaseHelper.COL_PASSWORD = ?"
+        val query = "SELECT ${DatabaseHelper.COL_ID} FROM ${DatabaseHelper.TABLE_NAME} WHERE ${DatabaseHelper.COL_USERNAME} = ? AND ${DatabaseHelper.COL_PASSWORD} = ?"
         val cursor = db.rawQuery(query, arrayOf(username, password))
         val userId: Long? = if (cursor.moveToFirst()) {
             cursor.getLong(cursor.getColumnIndex(DatabaseHelper.COL_ID))
@@ -46,7 +54,7 @@ object Dao {
 
     @SuppressLint("Range")
     fun getUserDetails(userId: Long): User? {
-        val query = "SELECT * FROM $DatabaseHelper.TABLE_NAME WHERE $DatabaseHelper.COL_ID = ?"
+        val query = "SELECT * FROM ${DatabaseHelper.TABLE_NAME} WHERE ${DatabaseHelper.COL_ID} = ?"
         val cursor = db.rawQuery(query, arrayOf(userId.toString()))
         val user: User? = if (cursor.moveToFirst()) {
             User(

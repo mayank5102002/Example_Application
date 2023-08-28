@@ -31,10 +31,15 @@ class RegisterFragment : Fragment() {
 
         val firstnameEditText : EditText = binding.editTextfirst
         val lastnameEditText : EditText = binding.editTextlast
+        val usernameEditText : EditText = binding.editTextemail
         val passwordEditText : EditText = binding.editTextpassword
         val repasswordEditText : EditText = binding.editTextrepassword
         val loginButton : Button = binding.buttonlogin
         val error : TextView = binding.error
+
+        viewModel.error.observe(viewLifecycleOwner){
+            makeVisible(error, it)
+        }
 
         makeInvisible(error)
         loginButton.setOnClickListener {
@@ -48,6 +53,12 @@ class RegisterFragment : Fragment() {
             val lastname = lastnameEditText.text.toString()
             if(lastname.isEmpty()){
                 makeVisible(error,"lastname  is empty")
+                return@setOnClickListener
+            }
+
+            val username = usernameEditText.text.toString()
+            if(username.isEmpty()){
+                makeVisible(error,"Email is empty")
                 return@setOnClickListener
             }
 
@@ -66,8 +77,7 @@ class RegisterFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val toast : Toast = Toast.makeText(requireContext(), "Username: $firstname, Password: $password", Toast.LENGTH_LONG)
-            toast.show()
+            viewModel.registerUser(firstname, lastname, username, password)
             makeInvisible(error)
 
             requireView().findNavController().popBackStack()
