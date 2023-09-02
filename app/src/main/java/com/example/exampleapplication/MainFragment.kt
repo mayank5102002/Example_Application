@@ -1,5 +1,7 @@
 package com.example.exampleapplication
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +11,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.findNavController
 import com.example.exampleapplication.databinding.ActivityMainBinding
 import com.example.exampleapplication.viewmodels.LoginVM
@@ -19,12 +22,17 @@ class MainFragment : Fragment() {
 
     private val viewModel : LoginVM by activityViewModels()
 
+    private lateinit var myPreferences: SharedPreferences
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         binding = ActivityMainBinding.inflate(layoutInflater)
+
+        myPreferences = requireContext().getSharedPreferences("My_Prefs", Context.MODE_PRIVATE)
+        checkIfAlreadyLoggedIn()
 
         viewModel.init(requireContext())
 
@@ -38,7 +46,14 @@ class MainFragment : Fragment() {
         }
 
         viewModel.loginId.observe(viewLifecycleOwner){
-            Toast.makeText(requireContext(), "Login successfully", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireContext(), "Login successful", Toast.LENGTH_LONG).show()
+
+            val editor = myPreferences.edit()
+            editor.putLong("loginId", it)
+            editor.apply()
+
+            val action = MainFragmentDirections.actionMainFragmentToHomeFragment()
+            requireView().findNavController().navigate(action)
         }
 
         loginButton.setOnClickListener {
@@ -65,6 +80,15 @@ class MainFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    private fun checkIfAlreadyLoggedIn(){
+        val loginId = myPreferences.getLong("loginId", -1)
+
+        if(loginId != -1L){
+            val action = MainFragmentDirections.actionMainFragmentToHomeFragment()
+            findNavController().navigate(action)
+        }
     }
 
     override fun onDestroy(){
